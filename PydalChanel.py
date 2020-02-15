@@ -117,7 +117,7 @@ class PydalChannel:
 		msg.setAddress("/pydalSendUpdate")
 		msg.append(self.num)
 		msg.append(renderStr)
-		msg.append(self.pydalPattern.frac)
+		msg.append(self.pydalPattern.getDuration())
 		self.superColliderClient.send(msg)
 
 	def play(self, pat, metaInfo=None):
@@ -129,7 +129,7 @@ class PydalChannel:
 		msg.setAddress("/pydalPlay")
 		msg.append(self.num)
 		msg.append(renderStr)
-		msg.append(pat.frac)
+		msg.append(pat.getDuration())
 		msg.append(pat.type)
 		if metaInfo is not None:
 			msg.append(metaInfo)
