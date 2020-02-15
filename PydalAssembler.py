@@ -88,6 +88,9 @@ class PydalNode:
 			merge += map(timeShift, self.children[i].render(childFracs[i+1]))
 
 		return merge
+
+	def getDuration(self):
+		return sum([c.getDuration() for c in self.children])
 	
 
 #render for SquareBracket:
@@ -106,6 +109,9 @@ class SquareBracketNode(PydalNode):
 		self.frac = frac = self.frac if frac is None else frac
 		renderedChildren = [c.render(frac) for c in self.children]
 		return flattenChildren(renderedChildren)
+
+	def getDuration(self):
+		return self.children[0].getDuration()
 
 	def __str__(self):
 		return "["+".".join([str(c) for c in self.children])+"]"
@@ -126,6 +132,9 @@ class SymbolNode(PydalNode):
 
 	def __str__(self):
 		return self.children[0]
+
+	def getDuration(self):
+		return self.frac
 
 class ExpressionNode(PydalNode):
 
@@ -148,7 +157,7 @@ class ExpressionNode(PydalNode):
 
 class ExpandBracketNode(PydalNode):
 
-	def __init__(self, children, frac = 1):
+	def __init__(self, children, frac = 1.0):
 		self.frac = frac
 		self.children = children
 		self.type = "ExpandBracket"
@@ -161,6 +170,7 @@ class ExpandBracketNode(PydalNode):
 		childFrac = 1.0 * frac
 		renderedChildren = [c.render(childFrac) for c in self.children]
 		return mergeRenderedChildren(childFrac, renderedChildren)
+
 
 	def __str__(self):
 		return ".".join([str(c) for c in self.children])
@@ -185,6 +195,9 @@ class MultNode(PydalNode):
 		childFrac = frac / self.multNum
 		childCopies = [self.child.render(childFrac) for i in range(self.multNum)]
 		return mergeRenderedChildren(childFrac, childCopies)
+
+	def getDuration(self):
+		return self.child.getDuration()
 
 	def __str__(self):
 		return str(self.child) + "*" + str(self.multNum)
@@ -248,6 +261,9 @@ class CurlyBracketNode(PydalNode):
 
 		return flattenChildren(renderedChildren)
 
+	def getDuration(self):
+		return self.children[0].getDuration()
+
 	def __str__(self):
 		return "{"+".".join([str(c) for c in self.children])+"}"
 
@@ -263,12 +279,17 @@ class AngleBracketNode(PydalNode):
 		self.leaf = False
 		self.frac = frac
 		self.type = "AngleBracket"
+		self.ind = 0
 
 	def render(self, frac=None):
 		self.frac = frac = self.frac if frac is None else frac
 		randInd = random.randint(0, len(self.children)-1)
 		child = self.children[randInd].render(frac)
+		self.ind = randInd
 		return child
+
+	def getDuration(self):
+		return self.children[self.ind].getDuration()
 
 	def __str__(self):
 		return "<"+".".join([str(c) for c in self.children])+">"
@@ -290,6 +311,9 @@ class ParenBracketNode(PydalNode):
 		child = self.children[self.seqInd].render(frac)
 		self.seqInd = (self.seqInd+1) % len(self.children)
 		return child
+
+	def getDuration(self):
+		return self.children[self.seqInd].getDuration()
 
 	def __str__(self):
 		return "("+".".join([str(c) for c in self.children])+")"
