@@ -25,6 +25,7 @@ if you build this with reactive js a la observable, you could change
 an entire "chain" of dependently built patterns just by changing
 the definition of something upstream in isolation
 
+(will also require a post-processor as described in ramp lang section)
 
 ================================================================
 ================================================================
@@ -32,10 +33,16 @@ the definition of something upstream in isolation
 
 for ramp lang, same syntax as above, but with: 
 
-ccName: 0.4 .2 .3
+ccName: 0.4 = .2  = ~ .3 
 
-implementation - supercollider "master" clock to start the ramp, but then at
-every buffer, it will just send a list of values to a max line object
+have a "post processor" that takes the rendered buffer and organizes
+it into "value/time" pairs. (eg, above becomes [[.4, 2], [.2 2], [~, 1], [.3 1]]).
+SuperCollider will take these beat-durations and then translate them into ms
+durations and send them to a line object
+Also indicate a loop-start value bc all ramps are relative.
+
+API call will look like ramp('oscAddr', 'patternString', loop-start)
+
 
 
 ================================================================
