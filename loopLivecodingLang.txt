@@ -79,4 +79,6 @@ child gets the same time duration as the parent node, rather than a split
 
 Also, linked probabilities - make them global over all expressions
 
+<>[char] - each [char] has a rng associated with it, and it won't advance 
+until each paren with the corresponding [char] has been called at least once
 
