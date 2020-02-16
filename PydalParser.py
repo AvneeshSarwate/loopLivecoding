@@ -67,7 +67,7 @@ def isRoboDrum(s):
 def isMidiSymbol(s):
     return re.match('^[cnf]?[0-9]+[a-z]?$', s) or s == "~"
 def isFloatSymbol(s):
-    return re.match('^\.[0-9]+$', s) or s == "~"
+    return re.match('^\.[0-9]+$', s) or s == "~" or s == "="
 
 
 symbolMatchers = {}
