@@ -89,3 +89,19 @@ Also, linked probabilities - make them global over all expressions
 <>[char] - each [char] has a rng associated with it, and it won't advance 
 until each paren with the corresponding [char] has been called at least once
 
+
+================================================================
+================================================================
+
+
+API extensions
+
+osc("addr", patternString) (like ramp API, without loop-start)
+
+in general, have a channel-manager that has a map of osc-addr to 
+PydalChannel mappings and will automatically create channels for
+addrs if needed
+
+
+weird extension ideas - use "symbol:mult" to expand out the frac time
+of "symbol" by mult (e.g. expand len by 10% to get wierd phasing)
