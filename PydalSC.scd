@@ -1,5 +1,5 @@
 //tempoclock with beat set to 1 cycle length
-(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, lemurBouncePort, chanPhaseTrackerTasks, ballVisualPort;
+(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, lemurBouncePort, chanPhaseTrackerTasks, ballVisualPort, abletonPort;
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 instrumentMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
@@ -12,6 +12,7 @@ python_FH_OSCport = NetAddr("localhost", 13371);
 maxPort = NetAddr("localhost", 5435);
 ballVisualPort = NetAddr("localhost", 7400);
 lemurBouncePort = NetAddr("localhost", 7100);
+abletonPort = NetAddr("localhost", 7110);
 
 channelPatternMap = Dictionary();        //maps channelKey -> currently playing buffer on that pattern
 chanBackupPatMap = Dictionary();         //maps channelKey -> buffer to be queued up next
@@ -52,8 +53,8 @@ drumTypes["aud"] = 108;
 startPattern = {|msg, time, addr, recvPort|
     //parse string to pattern
     var patternList, loopFrac, ind, startDelay, chanClock;
-    ["PLAY START", msg[2], masterTempoClock.beats].postln;
     patternList = patternRead.(msg[2].asString);
+    ["PLAY START", patternList, masterTempoClock.beats].postln;
 
     maxPort.sendRaw((["/pattern", msg[1].asInt] ++ patternList.collect({|elem| elem[0]})).asArray.asRawOSC);
 
@@ -118,9 +119,12 @@ playStepGenerator = {|i|
 			var dur = step[0];
 
 			step[1].do({|samp| sendSample.(samp, i, ind)});
-			//["STEP", i, ind, tempoClockMap[i].beats%1, step].postln;
+            ["STEP", i, ind, tempoClockMap[i].beats, step].postln;
 
-			if(ind == (patList.size-1), {pythonOSCport.sendMsg("/pydalGetUpdate-"++i)});
+			if(ind == (patList.size-1), {
+                pythonOSCport.sendMsg("/pydalGetUpdate-"++i);
+                ["REQUESTING PATTERN", i, ind, patList].postln;
+            });
 
 			//update indexes appropriately
 			channelInd[i] = (ind+1)%patList.size;
@@ -129,7 +133,7 @@ playStepGenerator = {|i|
 			retVal = dur;
 			//["RETVAL1", retVal].postln;
 		});
-		//["RETVAL2", retVal].postln;
+        // ["RETVAL2", retVal].postln;
 		retVal
 	};
 	playStep
@@ -187,9 +191,9 @@ OSCFunc(syncClocks, "/syncClocks");
 //msg[3] is the total length in beats of the pattern
 recieveBackupPattern = {|msg, time, addr, recvPort|
 	//parse string and save it to backupmap
-	//["GOT BACKUP", msg[2]].postln;
 
     var patternList = patternRead.(msg[2].asString);
+    ["GOT BACKUP", patternList].postln;
     maxPort.sendRaw((["/pattern", msg[1].asInt] ++ patternList.collect({|elem| elem[0]})).asArray.asRawOSC);
 
     chanBackupPatMap[msg[1]] = timeListToDurationList.(patternList,  msg[3].asFloat);
@@ -267,6 +271,20 @@ timeListToDurationList = {|oldList, totalLength|
     pList.add([totalLength - oldList[oldList.size-1][0], oldList[oldList.size-1][1]]);
 
     pList
+};
+(
+runRamp = {|oscAddr, startVal, endVal, dur|
+    var hz = 0.01;
+    var numSteps = (duration/hz).floor;
+    var steps = List.fill(numSteps, {|i| i/numSteps});
+    var pat = Pbind(
+        \delta, hz,
+        \lerp, Pseq(steps),
+        \play, {
+            abletonPort.sendMsg(oscAddr, (lerp*endVal)+((1-lerp)*startVal))
+        }
+    );
+    pat.play(masterTempoClock);
 };
 
 // handles what happens during a "hit" for all of the different channel types
@@ -347,6 +365,21 @@ sendSample = {|drumStr, chan, ind|
                     midiOut.noteOff(patMidiChannel, drumStr.asInt, 64);
                 }).play;
             });
+        });
+    });
+    if(channelTypeMap[chan] == 'osc', {
+        if(drumStr.asSymbol != '~', {
+            abletonPort.sendMsg(chan, drumStr.asFloat);
+        });
+    });
+    if(channelTypeMap[chan] == 'ramp', {
+        if(drumStr.asSymbol != '~', {
+            var val = drumStr.asString.split($/)[0].asFloat;
+            var dur = drumStr.asString.split($/)[1].asFloat;
+            var metaInfo = channelMetaInfo[chan];
+            runRamp.(chan, metaInfo[1], val, dur);
+            metaInfo[1] = val;
+
         });
     });
 };
