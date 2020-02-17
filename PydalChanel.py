@@ -126,6 +126,9 @@ class PydalChannel:
 	def play(self, pat, metaInfo=None):
 		self.pydalPattern = pat
 		self.isPlaying = True
+
+		#todo linkedProb - register pattern with probability manager
+
 		renderList = self.pydalPattern.render()
 		if self.pydalPattern.postProcessor is not None:
 			renderList = self.pydalPattern.postProcessor.process(renderList, self.pydalPattern.getDuration())
@@ -142,6 +145,7 @@ class PydalChannel:
 
 	def stop(self):
 		self.isPlaying = False
+		#todo linkedProb - register pattern with probability manager
 		msg = OSC.OSCMessage()
 		msg.setAddress("/pydalStop")
 		msg.append(self.num)

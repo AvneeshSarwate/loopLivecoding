@@ -271,7 +271,13 @@ class CurlyBracketNode(PydalNode):
 	#how many times this node must be evaluated before it returns the same expression
 	#def getPeriod():  
 
-
+# todo linkedProb
+# probability manager
+# - need to track all linked brackets in only ACTIVELY playing channels
+# - upon play, register an expression tree with the probability manager
+# - upon stop, remove an expression from probability manager
+# - per-key map of node-id to call-count, per key random number
+# - getRandom(key, nodeId) - get minCount for nodes in key, update counts, get new minCount, if it's higher, update random number, return random number
 
 class AngleBracketNode(PydalNode):
 
@@ -281,10 +287,11 @@ class AngleBracketNode(PydalNode):
 		self.frac = frac
 		self.type = "AngleBracket"
 		self.ind = 0
+		self.probabilityKey = None
 
 	def render(self, frac=None):
 		self.frac = frac = self.frac if frac is None else frac
-		randInd = random.randint(0, len(self.children)-1)
+		randInd = random.randint(0, len(self.children)-1) #todo linkedProb - replace with call to probability manager
 		child = self.children[randInd].render(frac)
 		self.ind = randInd
 		return child

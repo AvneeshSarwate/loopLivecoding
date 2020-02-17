@@ -44,7 +44,7 @@ def isNumber(s):
 def isOpenParen(s):
     return s in ("{", "[", "(", "<", "|")
 def isEndParen(s):
-    return s in ("}", "]", ")", ">", "/")
+    return s in ("}", "]", ")", ">", "/") #todo linkedProb - change this to be regex for ">[char]" end paren
 def isComma(s):
     return s == ","
 #TODO: more conditions required to determine valid symbol 
@@ -143,9 +143,10 @@ def parseParenBlock(tokenList, ind, isSymbol, parseDebug = False):
             (openParen == "[" and tokenList[ind] == "]") or 
             (openParen == "{" and tokenList[ind] == "}") or
             (openParen == "(" and tokenList[ind] == ")") or
-            (openParen == "<" and tokenList[ind] == ">") or
+            (openParen == "<" and tokenList[ind] == ">") or #todo linkedProb - change this to regex for close paren
             (openParen == "|" and tokenList[ind] == "/")
        ):
+        #todo linkedProb - if endParen is linkedProb, set properties on the AngleBracketNode
         if ind+1 < len(tokenList) and isMult(tokenList[ind+1]):
             return parseMult(tokenList, ind+1, node)
         else:
