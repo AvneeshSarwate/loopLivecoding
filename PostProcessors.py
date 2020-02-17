@@ -11,12 +11,13 @@ def makeDurationList(renderList):
     def getDur(hitInd):
         i = 0
         while rl[hitInd+i] == '=':
-            i++
+            i += 1
         return rl[hitInd+i][0] - rl[hitInd][0]
 
-    getDurSymbol = lambda h: set([rl[h][1]+'/'+str(getDur(h))]) #symbol is now 'hitStr/dur'
+    getDurSymbol = lambda h: set([str(rl[h][1])+'/'+str(getDur(h))]) #symbol is now 'hitStr/dur'
 
     newList = [[rl[h][0], getDurSymbol(h)] for h in newHits]
+    return newList
 
 
 class DurationPostProcessor:
@@ -28,10 +29,10 @@ class DurationPostProcessor:
 
 class RampPostProcessor:
 
-    __init__(self, startVal):
+    def __init__(self, startVal):
         self.startVal = startVal
 
     def process(self, renderList):
-        renderList[0][0] += 0.01
+        renderList[0] = [0.01, renderList[1]]
         renderList.insert(0, (0, set([self.startVal])))
-        durationList = makeDurationList(renderList)
+        return makeDurationList(renderList)
