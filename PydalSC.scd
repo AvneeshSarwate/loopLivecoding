@@ -1,5 +1,5 @@
 //tempoclock with beat set to 1 cycle length
-(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, lemurBouncePort, chanPhaseTrackerTasks, ballVisualPort, abletonPort;
+(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, lemurBouncePort, chanPhaseTrackerTasks, ballVisualPort, abletonPort, runRamp;
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 instrumentMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
@@ -272,16 +272,16 @@ timeListToDurationList = {|oldList, totalLength|
 
     pList
 };
-(
+
 runRamp = {|oscAddr, startVal, endVal, dur|
     var hz = 0.01;
-    var numSteps = (duration/hz).floor;
+    var numSteps = (dur/hz).floor;
     var steps = List.fill(numSteps, {|i| i/numSteps});
     var pat = Pbind(
         \delta, hz,
         \lerp, Pseq(steps),
         \play, {
-            abletonPort.sendMsg(oscAddr, (lerp*endVal)+((1-lerp)*startVal))
+            abletonPort.sendMsg(oscAddr, (~lerp*endVal)+((1-~lerp)*startVal))
         }
     );
     pat.play(masterTempoClock);
