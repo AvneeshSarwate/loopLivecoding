@@ -80,6 +80,8 @@ symbolMatchers['ballState'] = isBallState
 symbolMatchers['funcTrigger'] = isFuncTrigger
 symbolMatchers['roboDrum'] = isRoboDrum
 symbolMatchers['midi'] = isMidiSymbol
+symbolMatchers['osc'] = isFloatSymbol
+symbolMatchers['ramp'] = isFloatSymbol
 
 
 # you can define what types of strings you use as tokens, they can
