@@ -109,13 +109,12 @@ class PydalChannel:
 		self.superColliderClient = client
 		self.superColliderServer.addMsgHandler("/pydalGetUpdate-"+str(self.num), self._update)
 		self.isPlaying = False
-		self.postProcessor = None
 
 
 	def _update(self, *args):
 		renderList = self.pydalPattern.render()
 		if self.pydalPattern.postProcessor is not None:
-			renderList = self.pydalPattern.postProcessor.process(renderList)
+			renderList = self.pydalPattern.postProcessor.process(renderList, self.pydalPattern.getDuration())
 		renderStr = ";".join(str(t[0]) + "-" + ",".join(t[1]) for t in renderList)
 		msg = OSC.OSCMessage()
 		msg.setAddress("/pydalSendUpdate")
@@ -129,7 +128,7 @@ class PydalChannel:
 		self.isPlaying = True
 		renderList = self.pydalPattern.render()
 		if self.pydalPattern.postProcessor is not None:
-			renderList = self.pydalPattern.postProcessor.process(renderList)
+			renderList = self.pydalPattern.postProcessor.process(renderList, self.pydalPattern.getDuration())
 		renderStr = ";".join(str(t[0]) + "-" + ",".join(t[1]) for t in renderList)
 		msg = OSC.OSCMessage()
 		msg.setAddress("/pydalPlay")
