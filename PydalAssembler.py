@@ -293,31 +293,31 @@ class ProbabilityManager:
 			nodes.append(node)
 			if node.type != 'Symbol':
 				for c in node.children:
-					addNodes(c)
+					addNodes(c, nodes)
 		addNodes(pattern, nodes)
 		return nodes
 
 
-	def registerPattern(self, channel, pattern):		
+	def registerPattern(self, chanKey, pattern):		
 		nodes = self.getNodes(pattern)
-		angleNodes = [c for n in nodes if n.type == "AngleBracket" && n.probabilityKey is not None]
+		angleNodes = [n for n in nodes if n.type == "AngleBracket" and n.probabilityKey is not None]
 		
-		if channel.num not in self.randomNumberTracker:
-			self.channelToNodes[channel.num] = []
+		if chanKey not in self.channelToNodes:
+			self.channelToNodes[chanKey] = []
 		else: 
-			self.deregisterPattern(channel)
+			self.deregisterPattern(chanKey)
 
 		for n in angleNodes:
-			self.channelToNodes[channel.num].append(n.nodeId)
+			self.channelToNodes[chanKey].append(n.nodeId)
 			if not n.probabilityKey in self.keyToNodes:
-				self.keyToNodes = {}
+				self.keyToNodes = {n.probabilityKey: {}}
 			self.keyToNodes[n.probabilityKey][n.nodeId] = 0
 
-	def deregisterPattern(self, channel):
-		nodes = self.channelToNodes[channel.num]
+	def deregisterPattern(self, chanKey):
+		nodes = self.channelToNodes[chanKey]
 		for n in nodes:
 			del self.keyToNodes[n.key][n.nodeId]
-		del self.channelToNodes[channel.num]
+		del self.channelToNodes[chanKey]
 
 	def getProbability(self, node):
 		key = node.probabilityKey
@@ -331,12 +331,13 @@ class ProbabilityManager:
 		return self.keyToRand[key]
 
 
-probabilityManger = ProbabilityManager()
+probabilityManager = ProbabilityManager()
 
 
 class AngleBracketNode(PydalNode):
 
 	def __init__(self, children, frac=1):
+		global nodeCounter
 		self.children = children
 		self.leaf = False
 		self.frac = frac
@@ -348,7 +349,7 @@ class AngleBracketNode(PydalNode):
 
 	def render(self, frac=None):
 		self.frac = frac = self.frac if frac is None else frac
-		randInd =  int(math.floor(probabilityManger.getProbability(self)*len(self.children))) #random.randint(0, len(self.children)-1) #todo linkedProb - replace with call to probability manager
+		randInd =  int(math.floor(probabilityManager.getProbability(self)*len(self.children))) #random.randint(0, len(self.children)-1) #todo linkedProb - replace with call to probability manager
 		child = self.children[randInd].render(frac)
 		self.ind = randInd
 		return child
