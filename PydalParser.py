@@ -27,7 +27,7 @@ import PydalAssembler as nodes
 delimiters = ["]", "[", "{", "}", "<", ">" "*", "x", ",", ")", "(", "|", "/"]
 
 def tokenize(inputStr):
-    p = "([" + "".join(delimiters) + "])"
+    p = "(>[a-x]|[" + "".join(delimiters) + "])"
     dirtyTokens = map(str.split, re.split(p, inputStr))
     tokens = list(itertools.chain.from_iterable(dirtyTokens))
     #print " ".join(tokens)
@@ -44,7 +44,7 @@ def isNumber(s):
 def isOpenParen(s):
     return s in ("{", "[", "(", "<", "|")
 def isEndParen(s):
-    return s in ("}", "]", ")", ">", "/") #todo linkedProb - change this to be regex for ">[char]" end paren
+    return s in ("}", "]", ")", ">", "/") or re.match('^>[a-z]$', s) #todo linkedProb - change this to be regex for ">[char]" end paren
 def isComma(s):
     return s == ","
 #TODO: more conditions required to determine valid symbol 
@@ -144,9 +144,12 @@ def parseParenBlock(tokenList, ind, isSymbol, parseDebug = False):
             (openParen == "{" and tokenList[ind] == "}") or
             (openParen == "(" and tokenList[ind] == ")") or
             (openParen == "<" and tokenList[ind] == ">") or #todo linkedProb - change this to regex for close paren
+            (openParen == "<" and re.match('^>[a-z]$', tokenList[ind])) or
             (openParen == "|" and tokenList[ind] == "/")
        ):
         #todo linkedProb - if endParen is linkedProb, set properties on the AngleBracketNode
+        if re.match('^>[a-z]$', tokenList[ind]):
+            node.probabilityKey = tokenList[ind][1]
         if ind+1 < len(tokenList) and isMult(tokenList[ind+1]):
             return parseMult(tokenList, ind+1, node)
         else:

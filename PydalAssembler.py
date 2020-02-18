@@ -11,12 +11,13 @@
 import itertools
 import copy
 import random
+import math
 
 
 #other node types needed: SquareBracket, 
 
 
-
+nodeCounter = 1
 
 #render for () and <> (random and "next") - must wrap a single {} or []
 #	render children totally 
@@ -279,6 +280,60 @@ class CurlyBracketNode(PydalNode):
 # - per-key map of node-id to call-count, per key random number
 # - getRandom(key, nodeId) - get minCount for nodes in key, update counts, get new minCount, if it's higher, update random number, return random number
 
+class ProbabilityManager:
+
+	def __init__(self):
+		self.channelToNodes = {}
+		self.keyToNodes = {}
+		self.keyToRand = {}
+
+	def getNodes(self, pattern):
+		nodes = []
+		def addNodes(node, nodes):
+			nodes.append(node)
+			if node.type != 'Symbol':
+				for c in node.children:
+					addNodes(c)
+		addNodes(pattern, nodes)
+		return nodes
+
+
+	def registerPattern(self, channel, pattern):		
+		nodes = self.getNodes(pattern)
+		angleNodes = [c for n in nodes if n.type == "AngleBracket" && n.probabilityKey is not None]
+		
+		if channel.num not in self.randomNumberTracker:
+			self.channelToNodes[channel.num] = []
+		else: 
+			self.deregisterPattern(channel)
+
+		for n in angleNodes:
+			self.channelToNodes[channel.num].append(n.nodeId)
+			if not n.probabilityKey in self.keyToNodes:
+				self.keyToNodes = {}
+			self.keyToNodes[n.probabilityKey][n.nodeId] = 0
+
+	def deregisterPattern(self, channel):
+		nodes = self.channelToNodes[channel.num]
+		for n in nodes:
+			del self.keyToNodes[n.key][n.nodeId]
+		del self.channelToNodes[channel.num]
+
+	def getProbability(self, node):
+		key = node.probabilityKey
+		oldMin = min(self.keyToNodes[key].values())
+		self.keyToNodes[key][node.nodeId] += 1
+		newMin = min(self.keyToNodes[key].values())
+		if not key in self.keyToRand:
+			self.keyToRand[key] = random.random()
+		if newMin > oldMin:
+			self.keyToRand[key] = random.random()
+		return self.keyToRand[key]
+
+
+probabilityManger = ProbabilityManager()
+
+
 class AngleBracketNode(PydalNode):
 
 	def __init__(self, children, frac=1):
@@ -288,10 +343,12 @@ class AngleBracketNode(PydalNode):
 		self.type = "AngleBracket"
 		self.ind = 0
 		self.probabilityKey = None
+		self.nodeId = nodeCounter
+		nodeCounter += 1
 
 	def render(self, frac=None):
 		self.frac = frac = self.frac if frac is None else frac
-		randInd = random.randint(0, len(self.children)-1) #todo linkedProb - replace with call to probability manager
+		randInd =  int(math.floor(probabilityManger.getProbability(self)*len(self.children))) #random.randint(0, len(self.children)-1) #todo linkedProb - replace with call to probability manager
 		child = self.children[randInd].render(frac)
 		self.ind = randInd
 		return child

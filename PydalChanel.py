@@ -2,6 +2,7 @@ import OSC
 import PydalParser as parser
 import copy
 import threading 
+import PydalAssembler
 
 class Pydal:
 	
@@ -128,6 +129,7 @@ class PydalChannel:
 		self.isPlaying = True
 
 		#todo linkedProb - register pattern with probability manager
+		PydalAssembler.probabilityManager.registerPattern(pat)
 
 		renderList = self.pydalPattern.render()
 		if self.pydalPattern.postProcessor is not None:
@@ -146,6 +148,7 @@ class PydalChannel:
 	def stop(self):
 		self.isPlaying = False
 		#todo linkedProb - register pattern with probability manager
+		PydalAssembler.probabilityManager.deregisterPattern(self.pydalPattern)
 		msg = OSC.OSCMessage()
 		msg.setAddress("/pydalStop")
 		msg.append(self.num)
