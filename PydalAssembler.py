@@ -326,9 +326,14 @@ class ProbabilityManager:
 		newMin = min(self.keyToNodes[key].values())
 		if not key in self.keyToRand:
 			self.keyToRand[key] = random.random()
-		if newMin > oldMin:
+
+		returnVal = self.keyToRand[key]
+
+		#update random val "after" each bracket has been called once
+		if newMin > oldMin: 
 			self.keyToRand[key] = random.random()
-		return self.keyToRand[key]
+
+		return returnVal
 
 
 probabilityManager = ProbabilityManager()
